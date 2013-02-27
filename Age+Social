@@ -1,0 +1,165 @@
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+class Wrong_Input{};
+class Neg{};
+class not_right{};
+
+int Social()
+{
+  char* so_array[5];
+	char input[9] = {}; 
+	int social = 0;
+	cin >> input;
+	social = strlen(input);
+
+	
+	/*if(input != "0" || "1" || "2" || "3" || "4" || "5" || "6" || "7" || "8" || "9" )
+		throw Wrong_Input();*/ //I wasnt able to get the type of input to work. 
+	if(social!=9)
+		throw not_right();
+	
+
+	else 
+	{ 
+		
+		so_array[0]=input;
+
+		string check;
+
+		cout<<"Do you want to input another social? \n";
+		cout<<"y/n \n";
+		cin>>check;
+
+		if(check=="y")
+		{
+			for(int i=0; i<4; i++)
+			{
+				cout<<"Please input new social \n";
+				cin>>input;
+				social = strlen(input);
+				if(social!=9)
+				{	throw not_right();
+					break;
+				}
+				else
+				{
+				so_array[i]=input;
+				cout<<"Do you want to input another social? \n";
+				cout<<"y/n \n";
+				cin>>check;
+				if(check =="n")
+				{break;}
+				}
+
+		}
+		}
+
+
+		if(check=="n");
+		
+
+		else
+			throw Wrong_Input();
+
+
+
+
+	}
+}
+
+
+int Age()
+{
+	int age_array[5];
+	int age;
+	cin>>age;
+
+	if(age<0)
+		throw Neg();
+	if(!cin.good())
+		throw Wrong_Input();
+
+	else 
+	{ 
+		
+		age_array[0]=age;
+
+		string check;
+
+		cout<<"Do you want to input another social? \n";
+		cout<<"y/n \n";
+		cin>>check;
+
+		if(check=="y")
+		{
+			for(int i=0; i<4; i++)
+			{
+				cout<<"Please input new social \n";
+				cin>>age;
+				if(age<0)
+				{	throw Neg();
+					break;
+				}
+				else
+				{
+				age_array[i]=age;
+				cout<<"Do you want to input another Age? \n";
+				cout<<"y/n \n";
+				cin>>check;
+				if(check =="n")
+				{break;}
+				}
+
+		}
+		}
+
+
+		if(check=="n");
+		
+
+		else
+			throw Wrong_Input();
+
+
+
+
+	}
+
+
+		
+//return age;
+}
+
+int main()
+{
+try{
+	cout<<"Please Input your social security \n";
+	Social();
+
+	cout<<"Please Input your age \n";
+	Age();
+}
+
+
+catch (Neg) {
+	cout<<"Sorry no negative numbers";
+}
+
+catch (Wrong_Input)
+{
+	cout<< "Sorry wrong input type";
+}
+
+
+catch (not_right)
+{
+	cout<<"Sorry wrong amount of numbers";
+}
+
+}
+
+
