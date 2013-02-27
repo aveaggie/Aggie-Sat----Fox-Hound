@@ -1,0 +1,351 @@
+#include <iostream>
+#include "Graph.h"         // get access to our graphics library facilities
+#include "GUI.h"
+#include "Window.h"
+#include <FL/Fl_Button.H>
+#include <FL/fl_draw.H>
+
+using namespace Graph_lib;
+
+class Fox  {
+public:
+  Fox(int x, int y);
+	
+	//animation function , not yet used
+	//void move_down_left(Simple_window&, Fox&);
+	
+	void move(int r, int c){x = ((c*70)+34);  y = ((r*70)+34);}	//changes current row and column
+	void adto_x(int n){x += n;}	     //changes x_coor	
+	void adto_y(int n){y += n;}         //changes y_coor
+	int row() const{return (y/70);}      //returns current row 
+	int col() const{return (x/70);}      //returns current column
+	int x_coor() const{return x;}	     //returns current X coordinate
+	int y_coor() const{return y;}	     //returns current Y coordinate
+	int old_row, old_column;		     //previous row and column (no return)
+	double dist;
+private:
+	int x;
+	int	y;
+};
+
+Fox::Fox(int col, int row)
+	:x((col*70)+34), y((row*70)+34), old_column(col), old_row(row), dist(0.0)
+{
+	
+}
+
+//------------------------------------------------------------------------------
+
+namespace game_play{
+//All the images and gifs we use in the background
+Image backg(Point(0,0),"back.jpg");
+Image off(Point(563,101),"offense.gif");
+Image def(Point(663,101),"defense.gif");
+Image tamuvic(Point(140,123),"tamuvict.gif");
+Image secvic(Point(140,123),"secvict.gif");
+Image coverimg(Point(0,0),"coverscreen.gif");
+Image gameimg(Point(0,0),"gamemode.jpg");
+Image teamsimg(Point(0,0),"pickteam.jpg");
+
+Fox qb(2,8);
+Fox def1(0,0), def2(2,0), def3(4,0), def4(6,0);
+int turn_count = 0;
+int hound_count = 0;
+int condition = 1;
+int trial = 0;
+int fox_score = 0;
+int hound_score =0;
+int score = 0;
+
+string inputname;
+bool fox_win, hound_win;
+struct Lines_window : Graph_lib::Window {
+    Lines_window(Point xy, int w, int h, const string& title);
+	//Where all of the callbacks and functions are declared
+	void checkerboard();
+	int Start_window();
+	int High_Score();
+	int Game();
+	int Play();
+	int Choice();	
+	void Defenses_display();
+    static void cb(Address, Address);
+	static void cbb(Address, Address);
+    static void cb_quit(Address, Address);
+	static void cb_cpu_hound(Address, Address);
+	static void cpu_fox(Address, Address);
+	static void Instructions(Address, Address);
+	static void playcb(Address, Address pb);
+	static void Defenses( Address, Address pb);
+	static void Two_Player(Address, Address pb);
+	static void One_Player(Address, Address pb);
+	static void One_Player_Defence(Address, Address pb);
+	static void Defencecb(Address, Address pb);
+	static void Defencecb2(Address, Address pb);
+	static void Defencecb3(Address, Address pb);
+	static void Defencecb4(Address, Address pb);
+	static void Defencecb5(Address, Address pb);
+	static void Defencecb6(Address, Address pb);
+	static void Defencecb7(Address, Address pb);
+	static void Defencecb8(Address, Address pb);
+	static void Defencecb9(Address, Address pb);
+	static void Defencecb0(Address, Address pb);
+	static void Defencecb11(Address, Address pb);
+	static void Defencecb12(Address, Address pb);
+	static void Defencecb13(Address, Address pb);
+	static void Defencecb14(Address, Address pb);
+	static void repeatyescb(Address, Address pb);
+	static void highscorecb(Address, Address pb);
+	static void cb_quit2(Address, Address pb);
+	void menu_pressed();
+	void hide_menu();
+	void quit();
+	Button quit_button;
+	bool pressed;
+	
+};
+int sq(int x){return x*x;}
+
+bool has_hound(int ro, int co)
+{
+	if((def1.row() == ro && def1.col() == co)||(def2.row() == ro && def2.col() == co)||(def3.row() == ro && def3.col() == co)||(def4.row() == ro && def4.col() == co))
+		return true;
+	else
+		return false;
+}
+
+bool has_fox(int ro, int co)
+{
+	if(qb.row() == ro && qb.col() == co)
+		return true;
+	else
+		return false;
+}
+bool has_either(int ro, int co)
+{
+	if((has_hound(ro,co) == true)||(has_fox(ro,co) == true)||(ro<0||ro>7||co<0||co>7))
+		return true;
+	else
+		return false; 
+}
+
+
+bool fox_is_surrounded()
+{
+	if((qb.col() == 0)&&(has_hound(qb.row()-1,qb.col()+1)==true)&&(has_hound(qb.row()+1,qb.col()+1)==true))
+		{return true; cerr<<"FOX WAS SURROUNDED!\n";}
+	else if((qb.col() == 7)&&(has_hound(qb.row()-1,qb.col()-1)==true)&&(has_hound(qb.row()+1,qb.col()-1)==true))
+		{return true; cerr<<"FOX WAS SURROUNDED!\n";}
+	else if((qb.row() == 7)&&(has_hound(qb.row()-1,qb.col()-1)==true)&&(has_hound(qb.row()-1,qb.col()+1)==true))
+		{return true; cerr<<"FOX WAS SURROUNDED!\n";}
+	else if((qb.row() == 7)&&(qb.col() == 7)&&(has_hound(qb.row()-1,qb.col()-1)==true))
+		{return true; cerr<<"FOX WAS SURROUNDED!\n";}
+	else if((has_hound(qb.row()-1,qb.col()-1)==true)&&(has_hound(qb.row()-1,qb.col()+1)==true)&&(has_hound(qb.row()+1,qb.col()-1)==true)&&(has_hound(qb.row()+1,qb.col()+1)==true))
+		{return true; cerr<<"FOX WAS SURROUNDED!\n";}
+	else
+		return false;
+}
+
+bool hound_victory()
+{
+	if(fox_is_surrounded() == true)
+	{
+		return true;
+	}
+	else
+	{
+		return false;
+	}
+}
+
+bool fox_victory()
+{
+	if(fox_win == true)
+	{
+		return true;
+	}
+	else 
+	{
+		return false;
+	}
+}
+
+
+double dist_max(double  a, double  b, double  c, double d)
+{
+	double max1 = 0, max2 = 0;
+	if(b>=a)
+		max1 = b;
+	else
+		max1 = a;
+	if(c>=d)
+		max2 = c;
+	else
+		max2 = d;
+	if(max1>=max2)
+		return max1;
+	else
+		return max2;
+}
+
+int lowest_hound()
+{
+	int r1, r2, rlow;
+	if(def1.row()>=def2.row())
+		r1 = def1.row();
+	else
+		r1 = def2.row();
+	if(def3.row()>=def4.row())
+		r2 = def3.row();
+	else
+		r2 = def4.row();
+	if(r1>=r2)
+		rlow = r1;
+	else
+		rlow = r2;
+
+	if(rlow == def1.row()){return 1;}
+	else if(rlow == def2.row()){return 2;}
+	else if(rlow == def3.row()){return 3;}
+	else if(rlow == def4.row()){return 4;}
+	else{return 1;}
+}
+
+
+void Lines_window::quit()
+{
+	pressed = true;
+	hide();
+}
+
+void set_dist()
+{
+	def1.dist = sqrt(sq(qb.x_coor()-def1.x_coor())+sq(qb.y_coor()-def1.y_coor()));
+	def2.dist = sqrt(sq(qb.x_coor()-def2.x_coor())+sq(qb.y_coor()-def2.y_coor()));
+	def3.dist = sqrt(sq(qb.x_coor()-def3.x_coor())+sq(qb.y_coor()-def3.y_coor()));
+	def4.dist = sqrt(sq(qb.x_coor()-def4.x_coor())+sq(qb.y_coor()-def4.y_coor()));
+}
+
+void safe_move()
+{
+	if(has_either(def1.row()+1,def1.col()-1) == false)
+		def1.move(def1.row()+1,def1.col()-1);
+	else if(has_either(def4.row()+1,def4.col()+1) == false)
+		def4.move(def4.row()+1,def4.col()+1);
+	else if(has_either(def3.row()+1,def3.col()+1) == false)
+		def3.move(def3.row()+1,def3.col()+1);
+	else if(has_either(def2.row()+1,def2.col()+1) == false)
+		def2.move(def2.row()+1,def2.col()+1);
+	else if(has_either(def2.row()+1,def2.col()-1) == false)
+		def2.move(def2.row()+1,def2.col()-1);
+	else if(has_either(def1.row()+1,def1.col()+1) == false)
+		def1.move(def1.row()+1,def1.col()+1);
+	else if(has_either(def3.row()+1,def3.col()-1) == false)
+		def3.move(def3.row()+1,def3.col()-1);
+	else if(has_either(def4.row()+1,def4.col()-1) == false)
+		def4.move(def4.row()+1,def4.col()-1);
+	else {fox_win = true; cerr<<"HOUND WAS STUCK!\n";}
+}
+
+void low_move(int r, int c)
+{
+	switch(lowest_hound())
+		{
+		case 1:
+			if((def1.col()<=3)&&(has_either(r+1,c+1) == false)){def1.adto_y(70); def1.adto_x(70);}
+			else if((def1.col()>4)&&(has_either(r+1,c-1) == false)){def1.adto_x(-70); def1.adto_y(70);}
+			else{safe_move();}
+			break;
+		case 2:
+			if((def2.col()<=3)&&(has_either(r+1,c+1) == false)){def2.adto_x(70); def2.adto_y(70);}
+			else if((def2.col()>4)&&(has_either(r+1,c-1) == false)){def2.adto_x(-70); def2.adto_y(70);}
+			else{safe_move();}
+			break;
+		case 3:
+			if((def3.col()<=3)&&(has_either(r+1,c+1) == false)){def3.adto_y(70); def3.adto_x(70);}
+			else if((def3.col()>4)&&(has_either(r+1,c-1) == false)){def3.adto_y(70); def3.adto_x(-70);}
+			else{safe_move();}
+			break;
+		case 4:
+			if((def4.col()<=3)&&(has_either(r+1,c+1) == false)){def4.adto_y(70); def4.adto_x(70);}
+			else if((def4.col()>4)&&(has_either(r+1,c-1) == false)){def4.adto_x(-70); def4.adto_y(70);}
+			else{safe_move();}
+			break;
+		}
+}
+
+bool inbounds(int x)
+{
+	if(x<0||x>560)
+		return false;
+	else
+		return true;
+}
+
+void best_move(Fox& faux, int r, int c)
+{
+	int move_dr, move_dl;
+	move_dr = sqrt(sq(qb.x_coor()-(faux.x_coor()+70))+sq(qb.y_coor()-(faux.y_coor())+70));
+	move_dl = sqrt(sq(qb.x_coor()-(faux.x_coor()-70))+sq(qb.y_coor()-(faux.y_coor())+70));
+
+	if((move_dr<move_dl)&&(inbounds(faux.x_coor()+70))&&(inbounds(faux.y_coor()+70))&&(has_fox(r+1,c+1) == false)&&(has_hound(r+1,c+1) == false))
+		{faux.adto_x(70);
+		faux.adto_y(70);}
+
+	else if((move_dl<move_dr)&&(inbounds(faux.x_coor()-70))&&(inbounds(faux.y_coor()+70))&&(has_fox(r+1,c-1) == false)&&(has_hound(r+1,c-1) == false))
+		{faux.adto_x(-70);
+		faux.adto_y(70);}
+
+	else
+		low_move(r,c);
+
+}
+
+void move_to_button(Fox& faux, int r, int c)
+{
+	faux.move(r,c);
+	faux.old_row=r;
+	faux.old_column=c;
+	++turn_count;
+	hound_count = 0;
+	if(condition!=3)
+		off.move(-100,0);
+}
+
+int farthest_hound()
+{
+	if(dist_max(def1.dist,def2.dist,def3.dist,def4.dist) == def1.dist){return 1;}
+	else if(dist_max(def1.dist,def2.dist,def3.dist,def4.dist) == def2.dist){return 2;}
+	else if(dist_max(def1.dist,def2.dist,def3.dist,def4.dist) == def3.dist){return 3;}
+	else if(dist_max(def1.dist,def2.dist,def3.dist,def4.dist) == def4.dist){return 4;}
+	else{return 1;}
+}
+void cpu_fox_move()
+{
+	int flip = randint(21);
+	if(turn_count==1)
+		qb.move(7,(randint(3)*2+1));
+	else if(flip%2){
+			if(has_either(qb.row()-1,qb.col()-1) == false)
+				qb.move(qb.row()-1,qb.col()-1);
+			else if(has_either(qb.row()-1,qb.col()+1) == false)
+				qb.move(qb.row()-1,qb.col()+1);
+			else if(has_either(qb.row()+1,qb.col()-1) == false)
+				qb.move(qb.row()+1,qb.col()-1);
+			else if(has_either(qb.row()+1,qb.col()+1) == false)
+				qb.move(qb.row()+1,qb.col()+1);
+	}
+	else{
+			if(has_either(qb.row()-1,qb.col()+1) == false)
+				qb.move(qb.row()-1,qb.col()+1);
+			else if(has_either(qb.row()-1,qb.col()-1) == false)
+				qb.move(qb.row()-1,qb.col()-1);
+			else if(has_either(qb.row()+1,qb.col()+1) == false)
+				qb.move(qb.row()+1,qb.col()+1);
+			else if(has_either(qb.row()+1,qb.col()-1) == false)
+				qb.move(qb.row()+1,qb.col()-1);
+	}
+	turn_count++;
+}
+
+}// end namespace gameplay
