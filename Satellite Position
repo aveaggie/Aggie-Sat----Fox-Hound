@@ -1,0 +1,63 @@
+#include <iostream>
+#include <vector>
+#include <math.h>
+#include <fstream>
+
+#define PI 3.14159265
+
+using namespace std;
+
+int main()
+{
+    double v = 0;
+    double tf = 1000;
+    double dt = 0.1;   
+    double f = 0.5;
+    double n = (tf/dt);
+    double time_track = 0;     
+
+    vector<double>position(n+1);
+    
+    
+   
+    //cin>> v;
+    
+    //position.push_back(0);
+    //cout<<position[0];
+    //position.push_back(mult);
+    //cout<<position[1];
+    
+    for ( int i = 0; i<(n); i++)    
+    {    
+        //int x=0;
+        //int pvalue = position[(i-1)];
+        //int sum = pvalue+mult;
+        
+        time_track = (i+1)*dt;
+        v = sin(2*PI*time_track*f);
+        position[i+1]= position[i]+(v*dt);
+        
+        //v = sin(2*PI*time_track*f);
+        //position.push_back(sum);
+        
+        //time_track = (i+1)*dt;
+        
+        //cout<<time_track;
+        cout<<v<<"V\n";
+    }
+    
+    ofstream position_graph;
+    position_graph.open ("graph.txt");
+    
+    for (int i= 0; i<position.size() ; ++i)
+    {
+        cout<< " Position at step " << i << " is " << position[i]<<"\n"<<"\n";
+        
+       // ofstream position_graph;
+    
+    position_graph <<position[i]<<"\n";
+    
+    }
+    position_graph.close();
+    
+}
