@@ -1,0 +1,29 @@
+#include <iostream>
+
+using namespace std;
+
+int fibonaci(int num)
+{
+  if(1 == num || 2 == num)
+	{
+		return 1;
+	}
+	else
+	{
+		return fibonaci(num-1) + fibonaci(num-2);
+	}
+}
+
+int main()
+{
+	cout <<"\n";
+	cout << "The Fibonacci Sequence is: "<<"\n"<<"\n";
+
+	for(int start = 1; start<=100; start++)
+	{
+		cout << "Number " << start << "  ----> " ;
+		cout << fibonaci(start) << "\n";
+	}
+	return 0;
+}
+
